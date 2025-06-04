@@ -132,16 +132,23 @@ describe("Browser Utils Service", () => {
     });
 
     it("returns a previously determined device using a cached value", () => {
+      let wasSet = false;
+      Object.defineProperty(BrowserPlatformUtilsService, "deviceCache", {
+        get: () => DeviceType.FirefoxExtension,
+        set: (value) => {
+          wasSet = true;
+        },
+        configurable: true,
+      });
+
       Object.defineProperty(navigator, "userAgent", {
         configurable: true,
         value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:58.0) Gecko/20100101 Firefox/58.0",
       });
-      jest.spyOn(BrowserPlatformUtilsService, "isFirefox");
 
       browserPlatformUtilsService.getDevice();
-
+      expect(wasSet).toBe(false);
       expect(browserPlatformUtilsService.getDevice()).toBe(DeviceType.FirefoxExtension);
-      expect(BrowserPlatformUtilsService.isFirefox).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -366,75 +373,5 @@ describe("Browser Utils Service", () => {
 
       expect(result).toBe("");
     });
-  });
-});
-
-describe("Safari Height Fix", () => {
-  const originalUserAgent = navigator.userAgent;
-
-  // Reset the userAgent.
-  afterAll(() => {
-    Object.defineProperty(navigator, "userAgent", {
-      value: originalUserAgent,
-    });
-  });
-
-  afterEach(() => {
-    (BrowserPlatformUtilsService as any).deviceCache = null;
-  });
-
-  test.each([
-    [
-      "safari 15.6.1",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6.1 Safari/605.1.15",
-      true,
-    ],
-    [
-      "safari 16.0",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15",
-      true,
-    ],
-
-    [
-      "safari 16.1",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15",
-      false,
-    ],
-    [
-      "safari 16.4",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15",
-      false,
-    ],
-    [
-      "safari 17.0 (future release)",
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-      false,
-    ],
-    [
-      "chrome",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
-      false,
-    ],
-    [
-      "firefox",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:58.0) Gecko/20100101 Firefox/58.0",
-      false,
-    ],
-    [
-      "opera",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3175.3 Safari/537.36 OPR/49.0.2695.0 (Edition developer)",
-      false,
-    ],
-    [
-      "edge",
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.74 Safari/537.36 Edg/79.0.309.43",
-      false,
-    ],
-  ])("Apply fix for %s", (name, userAgent, expected) => {
-    Object.defineProperty(navigator, "userAgent", {
-      configurable: true,
-      value: userAgent,
-    });
-    expect(BrowserPlatformUtilsService.shouldApplySafariHeightFix(window)).toBe(expected);
   });
 });

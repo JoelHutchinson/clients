@@ -85,24 +85,6 @@ export abstract class BrowserPlatformUtilsService implements PlatformUtilsServic
     return this.getDevice() === DeviceType.VivaldiExtension;
   }
 
-  private static safariVersion(): string {
-    return navigator.userAgent.match("Version/([0-9.]*)")?.[1];
-  }
-
-  /**
-   * Safari previous to version 16.1 had a bug which caused artifacts on hover in large extension popups.
-   * https://bugs.webkit.org/show_bug.cgi?id=218704
-   */
-  static shouldApplySafariHeightFix(globalContext: Window | ServiceWorkerGlobalScope): boolean {
-    if (BrowserPlatformUtilsService.getDevice(globalContext) !== DeviceType.SafariExtension) {
-      return false;
-    }
-
-    const version = BrowserPlatformUtilsService.safariVersion();
-    const parts = version?.split(".")?.map((v) => Number(v));
-    return parts?.[0] < 16 || (parts?.[0] === 16 && parts?.[1] === 0);
-  }
-
   isSafari(): boolean {
     return this.getDevice() === DeviceType.SafariExtension;
   }
